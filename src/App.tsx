@@ -547,12 +547,24 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Carry & Strategy Insights */}
+              {/* Macro & Strategy Insights */}
               <div className="mt-5 p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3 text-xs">
                 <div className="flex justify-between items-center font-semibold text-slate-200">
-                  <span>Carry Differential (Base - Quote):</span>
+                  <span>Macro Composite Diff Score (All 6 Pillars):</span>
+                  <span className={`font-mono text-sm font-bold ${selectedPair.score >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {selectedPair.score > 0 ? `+${selectedPair.score}` : selectedPair.score} / 10
+                  </span>
+                </div>
+                <div className="flex justify-between items-center font-semibold text-slate-200 border-t border-slate-800/80 pt-2">
+                  <span>Carry Spread (Policy Rate Diff):</span>
                   <span className={`font-mono text-sm ${selectedPair.interestRateDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {selectedPair.interestRateDiff > 0 ? `+${selectedPair.interestRateDiff}%` : `${selectedPair.interestRateDiff}%`}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center font-semibold text-slate-200 border-t border-slate-800/80 pt-2">
+                  <span>Sovereign Yield Spreads (2Y / 10Y):</span>
+                  <span className="font-mono text-xs text-cyan-300 font-bold">
+                    2Y: {selectedPair.yieldDiff2Y > 0 ? `+${selectedPair.yieldDiff2Y}%` : `${selectedPair.yieldDiff2Y}%`} | 10Y: {selectedPair.yieldDiff10Y > 0 ? `+${selectedPair.yieldDiff10Y}%` : `${selectedPair.yieldDiff10Y}%`}
                   </span>
                 </div>
                 <div className="flex justify-between items-center font-semibold text-slate-200 border-t border-slate-800/80 pt-2">
