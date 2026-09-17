@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { computePairAnalyses, getAllCurrenciesScored, DEFAULT_WEIGHTS } from './services/scoringEngine';
 import { getStoredMacroData, syncLiveMarketData, getLastSyncTime } from './services/liveDataService';
 import { ModelWeightsAndHealth } from './components/ModelWeightsAndHealth';
+import { YieldAndCOTCharts } from './components/YieldAndCOTCharts';
 import { ModelWeights, MarketRegime } from './types';
 import { ForexPairAnalysis, CurrencyCode } from './types';
 import { UPCOMING_EVENTS } from './data/seedData';
@@ -46,7 +47,7 @@ export default function App() {
   const [filterCurrency, setFilterCurrency] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
   const [selectedPair, setSelectedPair] = useState<ForexPairAnalysis | null>(null);
-  const [activeTab, setActiveTab] = useState<'matrix' | 'cot' | 'calendar' | 'weights'>('matrix');
+  const [activeTab, setActiveTab] = useState<'matrix' | 'cot' | 'charts' | 'calendar' | 'weights'>('matrix');
 
   // Ranked currencies by strength
   const rankedCurrencies = Object.values(currencies).sort((a, b) => b.score - a.score);
@@ -131,6 +132,14 @@ export default function App() {
             }`}
           >
             COT Institutional Data
+          </button>
+          <button
+            onClick={() => setActiveTab('charts')}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
+              activeTab === 'charts' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <BarChart2 className="w-3.5 h-3.5" /> Yield & COT Charts
           </button>
           <button
             onClick={() => setActiveTab('calendar')}
@@ -332,6 +341,11 @@ export default function App() {
               ))}
             </div>
           </section>
+        )}
+
+        {/* Yield Curve & COT Charts View */}
+        {activeTab === 'charts' && (
+          <YieldAndCOTCharts currencies={currencies} />
         )}
 
         {/* Model Weights & Source Health View */}
