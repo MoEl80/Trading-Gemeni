@@ -88,9 +88,12 @@ export function computeCurrencyScore(c: Omit<CurrencyMacro, 'score'>, weights: M
   return Number(Math.max(-10, Math.min(10, score)).toFixed(1));
 }
 
-export function getAllCurrenciesScored(weights: ModelWeights = DEFAULT_WEIGHTS): Record<string, CurrencyMacro> {
+export function getAllCurrenciesScored(
+  weights: ModelWeights = DEFAULT_WEIGHTS,
+  macroData: Record<string, Omit<CurrencyMacro, 'score'>> = SEED_CURRENCIES
+): Record<string, CurrencyMacro> {
   const result: Record<string, CurrencyMacro> = {};
-  for (const [code, raw] of Object.entries(SEED_CURRENCIES)) {
+  for (const [code, raw] of Object.entries(macroData)) {
     result[code] = {
       ...raw,
       score: computeCurrencyScore(raw, weights)
@@ -99,8 +102,12 @@ export function getAllCurrenciesScored(weights: ModelWeights = DEFAULT_WEIGHTS):
   return result;
 }
 
-export function computePairAnalyses(weights: ModelWeights = DEFAULT_WEIGHTS, currentRegime: MarketRegime = 'RISK_ON'): ForexPairAnalysis[] {
-  const scoredCurrencies = getAllCurrenciesScored(weights);
+export function computePairAnalyses(
+  weights: ModelWeights = DEFAULT_WEIGHTS,
+  currentRegime: MarketRegime = 'RISK_ON',
+  macroData: Record<string, Omit<CurrencyMacro, 'score'>> = SEED_CURRENCIES
+): ForexPairAnalysis[] {
+  const scoredCurrencies = getAllCurrenciesScored(weights, macroData);
 
   return FOREX_PAIRS_LIST.map(([base, quote]) => {
     const b = scoredCurrencies[base];

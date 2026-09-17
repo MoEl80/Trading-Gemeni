@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { computePairAnalyses, getAllCurrenciesScored, DEFAULT_WEIGHTS } from './services/scoringEngine';
+import { getStoredMacroData, syncLiveMarketData, getLastSyncTime } from './services/liveDataService';
 import { ModelWeightsAndHealth } from './components/ModelWeightsAndHealth';
 import { ModelWeights, MarketRegime } from './types';
 import { ForexPairAnalysis, CurrencyCode } from './types';
@@ -15,8 +16,32 @@ export default function App() {
     return saved ? JSON.parse(saved) : DEFAULT_WEIGHTS;
   });
   const [regime, setRegime] = useState<MarketRegime>('RISK_ON');
-  const pairs = computePairAnalyses(weights, regime);
-  const currencies = getAllCurrenciesScored(weights);
+  const [macroData, setMacroData] = useState(() => getStoredMacroData());
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
+  const [lastSync, setLastSync] = useState<string | null>(() => getLastSyncTime());
+
+  const pairs = computePairAnalyses(weights, regime, macroData);
+  const currencies = getAllCurrenciesScored(weights, macroData);
+
+  const handleLiveSync = async () => {
+    setIsSyncing(true);
+    setSyncNotice('Connecting to open financial gateways & mirrors...');
+    try {
+      const res = await syncLiveMarketData((msg) => setSyncNotice(msg));
+      setMacroData(res.data);
+      const nowStr = new Date().toLocaleTimeString();
+      setLastSync(nowStr);
+      setSyncNotice(`Synced: ${res.tierUsed === 'LIVE_API' ? 'Live Gateway' : res.tierUsed === 'PUBLIC_MIRROR' ? 'Public Mirror' : 'Snapshot Cache'} (${res.updatedCount} items refreshed)`);
+      setTimeout(() => setSyncNotice(null), 5000);
+    } catch {
+      setSyncNotice('Network restricted. Retained validated local snapshot cache.');
+      setTimeout(() => setSyncNotice(null), 5000);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const [filterBias, setFilterBias] = useState<string>('ALL');
   const [filterCurrency, setFilterCurrency] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
@@ -64,6 +89,29 @@ export default function App() {
             </h1>
             <p className="text-xs text-slate-400">Institutional Fundamental Analysis & COT Engine for all 28 Cross Pairs</p>
           </div>
+        </div>
+
+        {/* Live Sync Status & Trigger */}
+        <div className="flex items-center gap-3">
+          {syncNotice && (
+            <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-800/60 px-2.5 py-1 rounded-full animate-pulse">
+              {syncNotice}
+            </span>
+          )}
+          <button
+            onClick={handleLiveSync}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition disabled:opacity-50 shadow-sm"
+            title="Fetch latest sovereign yields, rates, and institutional indicators"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Live Sync'}
+          </button>
+          {lastSync && (
+            <span className="text-[10px] text-slate-500 font-mono hidden md:inline">
+              Updated: {lastSync.includes('T') ? new Date(lastSync).toLocaleTimeString() : lastSync}
+            </span>
+          )}
         </div>
 
         {/* Global Nav Tabs */}
