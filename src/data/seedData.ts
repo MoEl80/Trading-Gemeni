@@ -1,4 +1,4 @@
-﻿import { CurrencyMacro, EconomicEvent } from '../types';
+import { CurrencyMacro, EconomicEvent } from '../types';
 
 export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
   USD: {
@@ -16,7 +16,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 3.95,
     yield10Y: 3.85,
     cotNetPosition: 14200,
-    cotChangeWeekly: -3100
+    cotChangeWeekly: -3100,
+    cotZScore: 0.45,
+    cotPercentile: 58,
+    economicSurpriseScore: 3.2,
+    riskBeta: 'SAFE_HAVEN'
   },
   EUR: {
     code: 'EUR',
@@ -33,7 +37,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 2.38,
     yield10Y: 2.25,
     cotNetPosition: -8400,
-    cotChangeWeekly: -1200
+    cotChangeWeekly: -1200,
+    cotZScore: -0.85,
+    cotPercentile: 32,
+    economicSurpriseScore: -2.8,
+    riskBeta: 'NEUTRAL'
   },
   GBP: {
     code: 'GBP',
@@ -50,7 +58,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 3.82,
     yield10Y: 3.95,
     cotNetPosition: 22500,
-    cotChangeWeekly: 4100
+    cotChangeWeekly: 4100,
+    cotZScore: 1.65,
+    cotPercentile: 88,
+    economicSurpriseScore: 4.1,
+    riskBeta: 'NEUTRAL'
   },
   JPY: {
     code: 'JPY',
@@ -67,7 +79,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 0.38,
     yield10Y: 0.88,
     cotNetPosition: -24100,
-    cotChangeWeekly: 18200
+    cotChangeWeekly: 18200,
+    cotZScore: -0.92,
+    cotPercentile: 26,
+    economicSurpriseScore: 1.5,
+    riskBeta: 'SAFE_HAVEN'
   },
   AUD: {
     code: 'AUD',
@@ -84,7 +100,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 3.65,
     yield10Y: 3.98,
     cotNetPosition: -12300,
-    cotChangeWeekly: 2400
+    cotChangeWeekly: 2400,
+    cotZScore: -0.40,
+    cotPercentile: 45,
+    economicSurpriseScore: 2.1,
+    riskBeta: 'HIGH_RISK_ON'
   },
   NZD: {
     code: 'NZD',
@@ -101,7 +121,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 3.88,
     yield10Y: 4.22,
     cotNetPosition: -8900,
-    cotChangeWeekly: -1500
+    cotChangeWeekly: -1500,
+    cotZScore: -0.65,
+    cotPercentile: 38,
+    economicSurpriseScore: -3.5,
+    riskBeta: 'HIGH_RISK_ON'
   },
   CAD: {
     code: 'CAD',
@@ -118,7 +142,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 3.15,
     yield10Y: 3.12,
     cotNetPosition: -68000,
-    cotChangeWeekly: 5200
+    cotChangeWeekly: 5200,
+    cotZScore: -2.15, // CROWDED SHORT EXTREME
+    cotPercentile: 4,
+    economicSurpriseScore: -1.2,
+    riskBeta: 'HIGH_RISK_ON'
   },
   CHF: {
     code: 'CHF',
@@ -135,7 +163,11 @@ export const SEED_CURRENCIES: Record<string, Omit<CurrencyMacro, 'score'>> = {
     yield2Y: 0.65,
     yield10Y: 0.48,
     cotNetPosition: -19800,
-    cotChangeWeekly: -800
+    cotChangeWeekly: -800,
+    cotZScore: -1.45,
+    cotPercentile: 18,
+    economicSurpriseScore: -0.8,
+    riskBeta: 'SAFE_HAVEN'
   }
 };
 
@@ -150,11 +182,11 @@ export const FOREX_PAIRS_LIST: [string, string][] = [
 ];
 
 export const UPCOMING_EVENTS: EconomicEvent[] = [
-  { id: '1', time: '12:30 GMT', currency: 'USD', event: 'Core CPI MoM', impact: 'HIGH', forecast: '0.2%', previous: '0.2%' },
-  { id: '2', time: '13:15 GMT', currency: 'EUR', event: 'ECB Interest Rate Decision', impact: 'HIGH', forecast: '3.65%', previous: '3.75%' },
-  { id: '3', time: '01:30 GMT', currency: 'AUD', event: 'Employment Change', impact: 'HIGH', forecast: '25.0K', previous: '58.2K' },
-  { id: '4', time: '07:00 GMT', currency: 'GBP', event: 'GDP MoM', impact: 'MEDIUM', forecast: '0.1%', previous: '0.0%' },
-  { id: '5', time: '03:00 GMT', currency: 'JPY', event: 'BoJ Monetary Policy Statement', impact: 'HIGH', forecast: '0.25%', previous: '0.25%' },
-  { id: '6', time: '14:00 GMT', currency: 'CAD', event: 'BoC Rate Decision', impact: 'HIGH', forecast: '4.25%', previous: '4.50%' },
-  { id: '7', time: '07:30 GMT', currency: 'CHF', event: 'SNB Rate Decision', impact: 'HIGH', forecast: '1.25%', previous: '1.25%' }
+  { id: '1', time: '12:30 GMT', currency: 'USD', event: 'Core CPI MoM', impact: 'HIGH', forecast: '0.2%', previous: '0.2%', surprise: 'BEAT' },
+  { id: '2', time: '13:15 GMT', currency: 'EUR', event: 'ECB Interest Rate Decision', impact: 'HIGH', forecast: '3.65%', previous: '3.75%', surprise: 'INLINE' },
+  { id: '3', time: '01:30 GMT', currency: 'AUD', event: 'Employment Change', impact: 'HIGH', forecast: '25.0K', previous: '58.2K', surprise: 'BEAT' },
+  { id: '4', time: '07:00 GMT', currency: 'GBP', event: 'GDP MoM', impact: 'MEDIUM', forecast: '0.1%', previous: '0.0%', surprise: 'BEAT' },
+  { id: '5', time: '03:00 GMT', currency: 'JPY', event: 'BoJ Monetary Policy Statement', impact: 'HIGH', forecast: '0.25%', previous: '0.25%', surprise: 'INLINE' },
+  { id: '6', time: '14:00 GMT', currency: 'CAD', event: 'BoC Rate Decision', impact: 'HIGH', forecast: '4.25%', previous: '4.50%', surprise: 'INLINE' },
+  { id: '7', time: '07:30 GMT', currency: 'CHF', event: 'SNB Rate Decision', impact: 'HIGH', forecast: '1.25%', previous: '1.25%', surprise: 'MISS' }
 ];

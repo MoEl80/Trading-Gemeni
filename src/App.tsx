@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { computePairAnalyses, getAllCurrenciesScored, DEFAULT_WEIGHTS } from './services/scoringEngine';
 import { ModelWeightsAndHealth } from './components/ModelWeightsAndHealth';
-import { ModelWeights } from './types';
+import { ModelWeights, MarketRegime } from './types';
 import { ForexPairAnalysis, CurrencyCode } from './types';
 import { UPCOMING_EVENTS } from './data/seedData';
 import { 
@@ -14,7 +14,8 @@ export default function App() {
     const saved = localStorage.getItem('fx_model_weights');
     return saved ? JSON.parse(saved) : DEFAULT_WEIGHTS;
   });
-  const pairs = computePairAnalyses(weights);
+  const [regime, setRegime] = useState<MarketRegime>('RISK_ON');
+  const pairs = computePairAnalyses(weights, regime);
   const currencies = getAllCurrenciesScored(weights);
   const [filterBias, setFilterBias] = useState<string>('ALL');
   const [filterCurrency, setFilterCurrency] = useState<string>('ALL');

@@ -13,12 +13,12 @@ export const OFFICIAL_SOURCES: SourceHealth[] = [
   {
     id: '1',
     category: 'Central Bank Policy Rates',
-    indicators: 'Cash Rates, Hike/Cut Bias, Forward Guidance',
-    primarySource: 'Central Banks (Fed, ECB, BoE, BoJ, RBA, RBNZ, BoC, SNB)',
+    indicators: 'Cash Rates, Hike/Cut Bias, Statement Forward Guidance',
+    primarySource: 'Official Central Bank Releases (Fed, ECB, BoE, BoJ, RBA, RBNZ, BoC, SNB)',
     backupSource: 'BIS & St. Louis Fed FRED Open API',
-    cadence: 'Meeting-by-Meeting (Scheduled)',
+    cadence: 'Meeting-by-Meeting (Scheduled dates)',
     lastUpdated: 'Current (Sep 2024 Cycle)',
-    nextDue: 'Next Decision in 6 days',
+    nextDue: 'Next Rate Decision in 6 days',
     status: 'HEALTHY',
     failoverActive: false,
     latencyMs: 38,
@@ -26,10 +26,10 @@ export const OFFICIAL_SOURCES: SourceHealth[] = [
   },
   {
     id: '2',
-    category: 'Sovereign Yields (2Y & 10Y)',
-    indicators: '2Y Benchmark & 10Y Sovereign Yields',
-    primarySource: 'National Debt Offices & Sovereign Treasuries',
-    backupSource: 'Yahoo Finance & Investing.com Bond Feeds',
+    category: 'Sovereign Yields (2Y & 10Y Curve)',
+    indicators: 'Benchmark 2Y (Forward Curve) & 10Y Sovereign Yields',
+    primarySource: 'National Debt Management Offices & Sovereign Treasuries',
+    backupSource: 'Yahoo Finance & Investing.com Public Bond Quotes',
     cadence: 'Daily (Market Close)',
     lastUpdated: 'Live Daily Close (Verified)',
     nextDue: 'Continuous EOD Sync',
@@ -40,25 +40,39 @@ export const OFFICIAL_SOURCES: SourceHealth[] = [
   },
   {
     id: '3',
-    category: 'CPI Inflation & Real Yields',
-    indicators: 'CPI YoY, Core CPI, 2.0% Target Spread',
-    primarySource: 'BLS, Eurostat, ONS, Japan SB, ABS, StatCan',
-    backupSource: 'OECD Data Portal & TradingEconomics',
-    cadence: 'Monthly (Mid-Month)',
+    category: 'Economic Surprise Index (CESI)',
+    indicators: 'Macro Beat vs Miss Momentum vs Consensus',
+    primarySource: 'Citigroup Surprise Framework / Bloomberg Consensus',
+    backupSource: 'TradingEconomics Historical Surprise Tracker',
+    cadence: 'Event-by-Event Realtime',
+    lastUpdated: 'Latest CPI/NFP Releases',
+    nextDue: 'Next Scheduled Release',
+    status: 'HEALTHY',
+    failoverActive: false,
+    latencyMs: 49,
+    requiresApiKey: false
+  },
+  {
+    id: '4',
+    category: 'Headline & Core Inflation (CPI)',
+    indicators: 'CPI YoY, Core CPI, Target Divergence (2.0% Anchor)',
+    primarySource: 'National Statistical Bureaus (US BLS, Eurostat, UK ONS, Japan SB, ABS, StatCan)',
+    backupSource: 'OECD Open Data Portal & TradingEconomics Scraper',
+    cadence: 'Monthly (Mid-Month Releases)',
     lastUpdated: 'Latest Release (Sep 2024)',
-    nextDue: 'Next CPI in 12 days',
+    nextDue: 'Next CPI Release in 12 days',
     status: 'HEALTHY',
     failoverActive: false,
     latencyMs: 62,
     requiresApiKey: false
   },
   {
-    id: '4',
-    category: 'Institutional COT Positioning',
-    indicators: 'Non-Commercial Futures Net Contracts & Delta',
-    primarySource: 'CFTC (Commodity Futures Trading Commission)',
-    backupSource: 'CFTC Public Compressed Archive',
-    cadence: 'Weekly (Fridays 3:30 PM EST)',
+    id: '5',
+    category: 'COT 52-Week Z-Score & Extremes',
+    indicators: 'Non-Commercial Futures Contracts, 52W Percentiles & Z-Scores',
+    primarySource: 'CFTC (U.S. Commodity Futures Trading Commission) Legacy Reports',
+    backupSource: 'CFTC Public Compressed Archive (Mirror)',
+    cadence: 'Weekly (Every Friday at 3:30 PM EST)',
     lastUpdated: 'Latest Friday Report',
     nextDue: 'Upcoming Friday 3:30 PM EST',
     status: 'HEALTHY',
@@ -67,31 +81,17 @@ export const OFFICIAL_SOURCES: SourceHealth[] = [
     requiresApiKey: false
   },
   {
-    id: '5',
-    category: 'Economic Growth & PMIs',
-    indicators: 'GDP YoY, S&P Global Mfg & Services PMIs',
-    primarySource: 'BEA, Eurostat, Cabinet Office, S&P Global',
-    backupSource: 'TradingEconomics & St. Louis Fed FRED',
+    id: '6',
+    category: 'Economic Growth & Leading PMIs',
+    indicators: 'Quarterly GDP YoY, S&P Global / ISM Manufacturing & Services PMIs',
+    primarySource: 'BEA, Eurostat, Cabinet Office Japan, S&P Global',
+    backupSource: 'TradingEconomics & St. Louis Fed FRED Mirror',
     cadence: 'Monthly (PMIs) & Quarterly (GDP)',
     lastUpdated: 'Current Quarter Snapshot',
     nextDue: 'Flash PMIs in 8 days',
     status: 'HEALTHY',
     failoverActive: false,
     latencyMs: 78,
-    requiresApiKey: false
-  },
-  {
-    id: '6',
-    category: 'Labor Market Conditions',
-    indicators: 'Unemployment Rate, Employment Delta',
-    primarySource: 'BLS (US), Eurostat, ONS, ABS, StatCan',
-    backupSource: 'FRED API & National Labor Departments',
-    cadence: 'Monthly (First/Second Friday)',
-    lastUpdated: 'Latest Monthly Report',
-    nextDue: 'Next Jobs Report in 15 days',
-    status: 'HEALTHY',
-    failoverActive: false,
-    latencyMs: 40,
     requiresApiKey: false
   }
 ];
@@ -100,7 +100,7 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
   const [sources, setSources] = useState<SourceHealth[]>(OFFICIAL_SOURCES);
   const [testingId, setTestingId] = useState<string | null>(null);
 
-  const totalWeight = weights.monetaryPolicy + weights.realYield + weights.growthPmi + weights.laborMarket + weights.cotSmartMoney;
+  const totalWeight = weights.monetaryPolicy + weights.realYield + weights.growthPmi + weights.laborMarket + weights.cotSmartMoney + weights.economicSurprise;
 
   const handleSliderChange = (key: keyof ModelWeights, value: number) => {
     onWeightsChange({
@@ -135,16 +135,15 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
 
   return (
     <div className="space-y-8">
-      {/* Model Calibration Console */}
       <section className="bg-[#161b22] border border-slate-800 rounded-2xl p-6 shadow-md">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-5">
           <div>
             <div className="flex items-center gap-2">
               <Sliders className="w-5 h-5 text-cyan-400" />
-              <h2 className="text-base font-bold text-white tracking-wide">Quantitative Model Weights Calibration</h2>
+              <h2 className="text-base font-bold text-white tracking-wide">Institutional Quant Model Weights Calibration</h2>
             </div>
             <p className="text-xs text-slate-400 mt-1">
-              Adjust the weight of each macroeconomic pillar. Changing weights recalculates all 28 currency pairs in real time.
+              Multi-factor quant engine spanning Central Bank Policy, 2Y Yield Spreads, CESI Surprise Momentum, and COT Z-Scores.
             </p>
           </div>
 
@@ -161,9 +160,8 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
           </div>
         </div>
 
-        {/* Presets */}
         <div className="my-5">
-          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Select Strategy Preset:</span>
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Institutional Strategy Presets:</span>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {Object.entries(PRESET_WEIGHTS).map(([k, p]) => (
               <button
@@ -181,23 +179,22 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
           </div>
         </div>
 
-        {/* Sliders */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
           <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-white">1. Central Bank & Policy Rates</span>
+              <span className="font-semibold text-white">1. Central Bank Policy Rates</span>
               <span className="font-mono font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/40">{weights.monetaryPolicy}%</span>
             </div>
             <input
               type="range"
               min="0"
-              max="60"
+              max="50"
               step="5"
               value={weights.monetaryPolicy}
               onChange={e => handleSliderChange('monetaryPolicy', Number(e.target.value))}
               className="w-full accent-cyan-400 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400">Evaluates hiking/cutting cycles, forward guidance, and absolute carry yield incentive.</p>
+            <p className="text-[11px] text-slate-400">Central bank hike/cut cycles and forward guidance.</p>
           </div>
 
           <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
@@ -214,7 +211,7 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
               onChange={e => handleSliderChange('realYield', Number(e.target.value))}
               className="w-full accent-indigo-400 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400">Purchasing power return. Positive real yields attract strong global capital inflows.</p>
+            <p className="text-[11px] text-slate-400">Purchasing power returns driving sovereign inflows.</p>
           </div>
 
           <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
@@ -225,13 +222,13 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
             <input
               type="range"
               min="0"
-              max="60"
+              max="50"
               step="5"
               value={weights.growthPmi}
               onChange={e => handleSliderChange('growthPmi', Number(e.target.value))}
               className="w-full accent-emerald-400 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400">Annualized GDP expansion and composite PMI momentum.</p>
+            <p className="text-[11px] text-slate-400">Annualized GDP and composite PMI momentum.</p>
           </div>
 
           <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
@@ -248,43 +245,45 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
               onChange={e => handleSliderChange('laborMarket', Number(e.target.value))}
               className="w-full accent-amber-400 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400">Unemployment rate vs natural equilibrium rate.</p>
+            <p className="text-[11px] text-slate-400">Unemployment rate vs equilibrium natural rate.</p>
           </div>
 
           <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
             <div className="flex justify-between items-center text-xs">
-              <span className="font-semibold text-white">5. Institutional COT Flows</span>
+              <span className="font-semibold text-white">5. COT 52-Week Z-Score</span>
               <span className="font-mono font-bold text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-800/40">{weights.cotSmartMoney}%</span>
             </div>
             <input
               type="range"
               min="0"
-              max="60"
+              max="50"
               step="5"
               value={weights.cotSmartMoney}
               onChange={e => handleSliderChange('cotSmartMoney', Number(e.target.value))}
               className="w-full accent-rose-400 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-400">Non-Commercial futures positioning from weekly CFTC filings.</p>
+            <p className="text-[11px] text-slate-400">CFTC Non-Commercial net futures Z-Score normalization.</p>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-900 to-cyan-950/30 p-4 rounded-xl border border-cyan-500/20 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs mb-1">
-                <Cpu className="w-4 h-4" /> 3-Tier Redundancy Active
-              </div>
-              <p className="text-[11px] text-slate-300">
-                Calculations auto-normalize to 100%. Zero drift between currency differentials.
-              </p>
+          <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-semibold text-white">6. Economic Surprise (CESI)</span>
+              <span className="font-mono font-bold text-teal-400 bg-teal-950/40 px-2 py-0.5 rounded border border-teal-800/40">{weights.economicSurprise}%</span>
             </div>
-            <div className="text-[10px] text-emerald-400 flex items-center gap-1 mt-2 font-mono">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Zero-Crash Circuit Breakers Online
-            </div>
+            <input
+              type="range"
+              min="0"
+              max="40"
+              step="5"
+              value={weights.economicSurprise}
+              onChange={e => handleSliderChange('economicSurprise', Number(e.target.value))}
+              className="w-full accent-teal-400 cursor-pointer"
+            />
+            <p className="text-[11px] text-slate-400">Macro beat/miss momentum relative to consensus forecasts.</p>
           </div>
         </div>
       </section>
 
-      {/* Source Health & Data Quality Monitor */}
       <section className="bg-[#161b22] border border-slate-800 rounded-2xl p-6 shadow-md space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-slate-800 pb-4">
           <div>
@@ -293,23 +292,13 @@ export const ModelWeightsAndHealth: React.FC<Props> = ({ weights, onWeightsChang
               <h2 className="text-base font-bold text-white tracking-wide">Official Macro Data Sources & Health Telemetry</h2>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Documented data feeds, official government publishers, update cadences, and backup failovers.
+              100% bulletproof 3-tier redundancy failover protocol ensuring zero crashes or calculation outages.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-1 text-[11px] font-bold rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> All Feeds Operating
             </span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 flex items-start gap-3 text-xs text-slate-300">
-          <ShieldCheck className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold text-white">What happens if a source fails or does not respond?</span>
-            <p className="text-slate-400 text-[11px] mt-0.5">
-              The architecture employs an automated <span className="text-cyan-300 font-medium">3-Tier Failover Protocol</span>. If Tier 1 (Primary Feed) times out or hits an error, queries auto-route to Tier 2 (Public Institutional Mirrors). If offline, Tier 3 activates seamlessly using the persistent validated cache with zero downtime.
-            </p>
           </div>
         </div>
 

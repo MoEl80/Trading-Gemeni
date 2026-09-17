@@ -1,11 +1,14 @@
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD' | 'NZD' | 'CAD' | 'CHF';
 
+export type MarketRegime = 'RISK_ON' | 'NEUTRAL' | 'RISK_OFF';
+
 export interface ModelWeights {
-  monetaryPolicy: number; // Default 30
-  realYield: number;      // Default 20
-  growthPmi: number;      // Default 25
-  laborMarket: number;    // Default 10
-  cotSmartMoney: number; // Default 15
+  monetaryPolicy: number; // Central bank policy trajectory
+  realYield: number;      // 10Y Yield - CPI
+  growthPmi: number;      // GDP & PMIs
+  laborMarket: number;    // Employment conditions
+  cotSmartMoney: number;  // Institutional COT positioning
+  economicSurprise: number; // Beat/Miss momentum
 }
 
 export interface SourceHealth {
@@ -37,23 +40,30 @@ export interface CurrencyMacro {
   servicesPmi: number;
   yield2Y: number;
   yield10Y: number;
-  cotNetPosition: number; // Net Non-Commercial (Contracts)
+  cotNetPosition: number;
   cotChangeWeekly: number;
-  score: number; // Computed score from -10 to +10
+  cotZScore: number;       // Normalized 52-week Z-Score (-3.0 to +3.0)
+  cotPercentile: number;   // 0% - 100%
+  economicSurpriseScore: number; // -10 (persistent misses) to +10 (strong beats)
+  riskBeta: 'HIGH_RISK_ON' | 'SAFE_HAVEN' | 'NEUTRAL';
+  score: number;
 }
 
 export type PairBias = 'STRONG_BUY' | 'BUY' | 'NEUTRAL' | 'SELL' | 'STRONG_SELL';
 
 export interface ForexPairAnalysis {
-  id: string; // e.g. EURUSD
-  symbol: string; // e.g. EUR/USD
+  id: string;
+  symbol: string;
   base: CurrencyCode;
   quote: CurrencyCode;
-  score: number; // Difference: Base Score - Quote Score (-20 to +20)
+  score: number;
   bias: PairBias;
   interestRateDiff: number; // Carry trade spread
-  yieldDiff10Y: number;
+  yieldDiff2Y: number;      // 2-Year short end spread (leading indicator)
+  yieldDiff10Y: number;     // 10-Year spread
   cotBias: 'Bullish' | 'Neutral' | 'Bearish';
+  cotCrowdedTradeAlert: 'CROWDED_LONG_RISK' | 'CROWDED_SHORT_RISK' | 'NORMAL';
+  regimeConviction: 'STRONG' | 'MODERATE' | 'CAUTION_REGIME_CONFLICT';
   baseScore: number;
   quoteScore: number;
 }
@@ -67,4 +77,5 @@ export interface EconomicEvent {
   actual?: string;
   forecast: string;
   previous: string;
+  surprise?: 'BEAT' | 'MISS' | 'INLINE';
 }
