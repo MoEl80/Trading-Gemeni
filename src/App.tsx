@@ -67,20 +67,20 @@ export default function App() {
     switch (state) {
       case 'COILED_SQUEEZE':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 w-fit">
-            <Zap className="w-3 h-3 text-amber-400 animate-pulse" /> SQUEEZE ({atrPct}%)
+          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 w-fit" title="Tight consolidation range. Breakout expected soon.">
+            <Zap className="w-3 h-3 text-amber-400" /> SQUEEZE ({atrPct}%)
           </span>
         );
       case 'PRE_EVENT_FREEZE':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1 w-fit">
-            <Clock className="w-3 h-3 text-cyan-300" /> EVENT FREEZE
+          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1 w-fit" title="Major Tier-1 data release due within 24h. Market is frozen/quiet.">
+            <Clock className="w-3 h-3 text-cyan-300" /> PRE-NEWS FREEZE
           </span>
         );
       case 'EXPANDING':
         return (
-          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center gap-1 w-fit">
-            <Flame className="w-3 h-3 text-rose-400 animate-bounce" /> EXPANDING ({atrPct}%)
+          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center gap-1 w-fit" title="Price is actively breaking out with high momentum.">
+            <Flame className="w-3 h-3 text-rose-400" /> EXPANDING ({atrPct}%)
           </span>
         );
       default:
@@ -317,10 +317,10 @@ export default function App() {
                   onChange={e => setFilterVolState(e.target.value)}
                   className="bg-slate-900 border border-slate-700 text-xs px-3 py-1.5 rounded-md focus:outline-none focus:border-cyan-500 text-amber-400 font-medium"
                 >
-                  <option value="ALL">All Volatility States</option>
+                  <option value="ALL">All Volatility Regimes</option>
+                  <option value="PRE_EVENT_FREEZE">⏳ Pre-News Freeze (Quiet Market)</option>
                   <option value="COILED_SQUEEZE">⚡ Coiled Squeeze (Breakout Imminent)</option>
-                  <option value="PRE_EVENT_FREEZE">⏳ Event Freeze (Low Vol Expected)</option>
-                  <option value="EXPANDING">🔥 Volatility Expanding</option>
+                  <option value="EXPANDING">🔥 Active Expansion (High Volatility)</option>
                   <option value="NORMAL">Normal Volatility</option>
                 </select>
               </div>

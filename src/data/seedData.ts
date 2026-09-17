@@ -182,11 +182,11 @@ export const FOREX_PAIRS_LIST: [string, string][] = [
 ];
 
 export const UPCOMING_EVENTS: EconomicEvent[] = [
-  { id: '1', time: '12:30 GMT', currency: 'USD', event: 'Core CPI MoM', impact: 'HIGH', forecast: '0.2%', previous: '0.2%', surprise: 'BEAT' },
-  { id: '2', time: '13:15 GMT', currency: 'EUR', event: 'ECB Interest Rate Decision', impact: 'HIGH', forecast: '3.65%', previous: '3.75%', surprise: 'INLINE' },
-  { id: '3', time: '01:30 GMT', currency: 'AUD', event: 'Employment Change', impact: 'HIGH', forecast: '25.0K', previous: '58.2K', surprise: 'BEAT' },
-  { id: '4', time: '07:00 GMT', currency: 'GBP', event: 'GDP MoM', impact: 'MEDIUM', forecast: '0.1%', previous: '0.0%', surprise: 'BEAT' },
-  { id: '5', time: '03:00 GMT', currency: 'JPY', event: 'BoJ Monetary Policy Statement', impact: 'HIGH', forecast: '0.25%', previous: '0.25%', surprise: 'INLINE' },
-  { id: '6', time: '14:00 GMT', currency: 'CAD', event: 'BoC Rate Decision', impact: 'HIGH', forecast: '4.25%', previous: '4.50%', surprise: 'INLINE' },
-  { id: '7', time: '07:30 GMT', currency: 'CHF', event: 'SNB Rate Decision', impact: 'HIGH', forecast: '1.25%', previous: '1.25%', surprise: 'MISS' }
+  { id: '1', time: 'Today 12:30 GMT', currency: 'USD', event: 'Core CPI MoM (Tier-1 Release)', impact: 'HIGH', forecast: '0.2%', previous: '0.2%', surprise: 'BEAT' },
+  { id: '2', time: 'Today 13:15 GMT', currency: 'EUR', event: 'ECB Interest Rate Decision & Presser', impact: 'HIGH', forecast: '3.65%', previous: '3.75%', surprise: 'INLINE' },
+  { id: '3', time: 'Tomorrow 07:00 GMT', currency: 'GBP', event: 'Monthly GDP & Manufacturing Output', impact: 'MEDIUM', forecast: '0.1%', previous: '0.0%', surprise: 'BEAT' },
+  { id: '4', time: 'In 3 Days', currency: 'AUD', event: 'RBA Meeting Minutes', impact: 'MEDIUM', forecast: '4.35%', previous: '4.35%', surprise: 'INLINE' },
+  { id: '5', time: 'In 4 Days', currency: 'JPY', event: 'National CPI YoY', impact: 'MEDIUM', forecast: '2.8%', previous: '2.8%', surprise: 'INLINE' },
+  { id: '6', time: 'In 5 Days', currency: 'CAD', event: 'Retail Sales MoM', impact: 'MEDIUM', forecast: '0.3%', previous: '-0.1%', surprise: 'INLINE' },
+  { id: '7', time: 'In 6 Days', currency: 'NZD', event: 'GDP Growth QoQ', impact: 'MEDIUM', forecast: '0.2%', previous: '0.2%', surprise: 'INLINE' }
 ];
