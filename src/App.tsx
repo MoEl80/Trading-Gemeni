@@ -8,7 +8,8 @@ import { ForexPairAnalysis, CurrencyCode } from './types';
 import { UPCOMING_EVENTS } from './data/seedData';
 import { 
   TrendingUp, TrendingDown, Minus, RefreshCw, BarChart2, 
-  Calendar, ShieldAlert, Layers, ArrowUpDown, Info, Sliders, CheckCircle, ExternalLink
+  Calendar, ShieldAlert, Layers, ArrowUpDown, Info, Sliders, CheckCircle, ExternalLink,
+  Zap, Flame, Clock, Gauge, AlertCircle, Activity
 } from 'lucide-react';
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
 
   const [filterBias, setFilterBias] = useState<string>('ALL');
   const [filterCurrency, setFilterCurrency] = useState<string>('ALL');
+  const [filterVolState, setFilterVolState] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
   const [selectedPair, setSelectedPair] = useState<ForexPairAnalysis | null>(null);
   const [activeTab, setActiveTab] = useState<'matrix' | 'cot' | 'charts' | 'calendar' | 'weights'>('matrix');
@@ -56,9 +58,39 @@ export default function App() {
   const filteredPairs = pairs.filter(p => {
     const matchesBias = filterBias === 'ALL' || p.bias === filterBias;
     const matchesCurrency = filterCurrency === 'ALL' || p.base === filterCurrency || p.quote === filterCurrency;
+    const matchesVol = filterVolState === 'ALL' || p.volatilityState === filterVolState;
     const matchesSearch = p.symbol.toLowerCase().includes(search.toLowerCase());
-    return matchesBias && matchesCurrency && matchesSearch;
+    return matchesBias && matchesCurrency && matchesVol && matchesSearch;
   });
+
+  const getVolBadge = (state: string, atrPct: number) => {
+    switch (state) {
+      case 'COILED_SQUEEZE':
+        return (
+          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 w-fit">
+            <Zap className="w-3 h-3 text-amber-400 animate-pulse" /> SQUEEZE ({atrPct}%)
+          </span>
+        );
+      case 'PRE_EVENT_FREEZE':
+        return (
+          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1 w-fit">
+            <Clock className="w-3 h-3 text-cyan-300" /> EVENT FREEZE
+          </span>
+        );
+      case 'EXPANDING':
+        return (
+          <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center gap-1 w-fit">
+            <Flame className="w-3 h-3 text-rose-400 animate-bounce" /> EXPANDING ({atrPct}%)
+          </span>
+        );
+      default:
+        return (
+          <span className="px-2 py-0.5 text-[10px] font-medium rounded bg-slate-800 text-slate-400 border border-slate-700/80 flex items-center gap-1 w-fit">
+            <Activity className="w-3 h-3 text-slate-400" /> Normal ({atrPct}%)
+          </span>
+        );
+    }
+  };
 
   const getBiasBadge = (bias: string) => {
     switch (bias) {
@@ -163,12 +195,48 @@ export default function App() {
       <main className="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full">
         {/* Top Currency Strength Heatmap Meter */}
         <section className="bg-[#161b22] border border-slate-800/80 rounded-xl p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
             <div>
               <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-cyan-400" /> Currency Strength Meter (G8 Economies)
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">Composite dynamic score (-10 to +10) across Interest Rates, Real Yields, CPI, GDP, and COT Flows</p>
+            </div>
+
+            {/* Volatility & Risk Regime Barometer */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700/80 text-xs font-mono">
+                <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-slate-400">MOVE Index (Bond Vol):</span>
+                <span className="text-emerald-400 font-bold">82.4 (Quiet)</span>
+              </div>
+              <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
+                <span className="text-slate-400 text-[11px] px-1 font-sans">Market Regime:</span>
+                <button
+                  onClick={() => setRegime('RISK_ON')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                    regime === 'RISK_ON' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Risk-On
+                </button>
+                <button
+                  onClick={() => setRegime('NEUTRAL')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                    regime === 'NEUTRAL' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Neutral
+                </button>
+                <button
+                  onClick={() => setRegime('RISK_OFF')}
+                  className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                    regime === 'RISK_OFF' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Risk-Off
+                </button>
+              </div>
             </div>
           </div>
 
@@ -244,6 +312,17 @@ export default function App() {
                   <option value="SELL">Sell</option>
                   <option value="STRONG_SELL">Strong Sell</option>
                 </select>
+                <select
+                  value={filterVolState}
+                  onChange={e => setFilterVolState(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 text-xs px-3 py-1.5 rounded-md focus:outline-none focus:border-cyan-500 text-amber-400 font-medium"
+                >
+                  <option value="ALL">All Volatility States</option>
+                  <option value="COILED_SQUEEZE">⚡ Coiled Squeeze (Breakout Imminent)</option>
+                  <option value="PRE_EVENT_FREEZE">⏳ Event Freeze (Low Vol Expected)</option>
+                  <option value="EXPANDING">🔥 Volatility Expanding</option>
+                  <option value="NORMAL">Normal Volatility</option>
+                </select>
               </div>
             </div>
 
@@ -254,6 +333,7 @@ export default function App() {
                   <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4">Pair</th>
                     <th className="py-3 px-4">Fundamental Bias</th>
+                    <th className="py-3 px-4">Volatility Regime</th>
                     <th className="py-3 px-4">Macro Diff Score</th>
                     <th className="py-3 px-4">Base vs Quote</th>
                     <th className="py-3 px-4">Rate Spread (Carry)</th>
@@ -267,6 +347,7 @@ export default function App() {
                     <tr key={p.id} className="hover:bg-slate-800/30 transition">
                       <td className="py-3 px-4 font-bold text-white font-sans text-sm">{p.symbol}</td>
                       <td className="py-3 px-4">{getBiasBadge(p.bias)}</td>
+                      <td className="py-3 px-4 font-sans">{getVolBadge(p.volatilityState, p.atrPercentile)}</td>
                       <td className="py-3 px-4">
                         <span className={`font-bold text-sm ${p.score >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {p.score > 0 ? `+${p.score}` : p.score}
@@ -467,13 +548,40 @@ export default function App() {
               </div>
 
               {/* Carry & Strategy Insights */}
-              <div className="mt-5 p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2 text-xs">
+              <div className="mt-5 p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3 text-xs">
                 <div className="flex justify-between items-center font-semibold text-slate-200">
                   <span>Carry Differential (Base - Quote):</span>
                   <span className={`font-mono text-sm ${selectedPair.interestRateDiff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {selectedPair.interestRateDiff > 0 ? `+${selectedPair.interestRateDiff}%` : `${selectedPair.interestRateDiff}%`}
                   </span>
                 </div>
+                <div className="flex justify-between items-center font-semibold text-slate-200 border-t border-slate-800/80 pt-2">
+                  <span>Volatility Regime & ATR Percentile:</span>
+                  <div className="flex items-center gap-2">
+                    {getVolBadge(selectedPair.volatilityState, selectedPair.atrPercentile)}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center font-semibold text-slate-200 border-t border-slate-800/80 pt-2">
+                  <span>Options Implied Vol Pricing:</span>
+                  <span className={`font-mono font-bold text-xs ${
+                    selectedPair.impliedVsRealized === 'CHEAP_IV' ? 'text-emerald-400' :
+                    selectedPair.impliedVsRealized === 'EXPENSIVE_HIGH_IV' ? 'text-rose-400' : 'text-slate-300'
+                  }`}>
+                    {selectedPair.impliedVsRealized === 'CHEAP_IV' ? 'CHEAP IV (Favorable for Options Buyers)' :
+                     selectedPair.impliedVsRealized === 'EXPENSIVE_HIGH_IV' ? 'EXPENSIVE / PRICED-IN EVENT RISK' : 'FAIR VALUE'}
+                  </span>
+                </div>
+                <p className="text-slate-400 leading-relaxed pt-1 border-t border-slate-800/60">
+                  {selectedPair.volatilityState === 'COILED_SQUEEZE' ? (
+                    <span className="text-amber-400 font-medium">⚡ Coiled Spring Squeeze: Daily ATR is in the bottom {selectedPair.atrPercentile}th percentile. Market is in deep compression. Avoid aggressive fading; anticipate an explosive directional release along the macro bias.</span>
+                  ) : selectedPair.volatilityState === 'PRE_EVENT_FREEZE' ? (
+                    <span className="text-cyan-300 font-medium">⏳ Tier-1 Event Freeze: High-impact central bank or CPI data is due within 48h. Expect dead price action and wide liquidity gaps until the numbers cross the wire.</span>
+                  ) : selectedPair.volatilityState === 'EXPANDING' ? (
+                    <span className="text-rose-400 font-medium">🔥 High Volatility Expansion: Price range is running at high ATR velocity. Favorable for momentum trend trades with trailing stops.</span>
+                  ) : (
+                    <span>Normal volatility conditions. Standard risk-to-reward parameters apply.</span>
+                  )}
+                </p>
                 <p className="text-slate-400 leading-relaxed">
                   {selectedPair.score >= 3.5 ? (
                     <span className="text-emerald-400">High fundamental divergence favoring {selectedPair.base}. Macro tailwinds support buying pullbacks or trend continuation.</span>

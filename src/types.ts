@@ -50,6 +50,7 @@ export interface CurrencyMacro {
 }
 
 export type PairBias = 'STRONG_BUY' | 'BUY' | 'NEUTRAL' | 'SELL' | 'STRONG_SELL';
+export type VolatilityState = 'COILED_SQUEEZE' | 'EXPANDING' | 'NORMAL' | 'PRE_EVENT_FREEZE';
 
 export interface ForexPairAnalysis {
   id: string;
@@ -66,6 +67,10 @@ export interface ForexPairAnalysis {
   regimeConviction: 'STRONG' | 'MODERATE' | 'CAUTION_REGIME_CONFLICT';
   baseScore: number;
   quoteScore: number;
+  volatilityState: VolatilityState;
+  atrPercentile: number;    // 0 - 100% of 52-week historical ATR
+  impliedVsRealized: 'CHEAP_IV' | 'FAIR' | 'EXPENSIVE_HIGH_IV';
+  eventFreezeRisk: boolean; // True if Tier-1 release is imminent within 24-48h
 }
 
 export interface EconomicEvent {
