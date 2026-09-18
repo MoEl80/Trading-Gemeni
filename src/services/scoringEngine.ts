@@ -2,34 +2,35 @@ import { CurrencyMacro, ForexPairAnalysis, PairBias, ModelWeights, MarketRegime,
 import { SEED_CURRENCIES, FOREX_PAIRS_LIST, UPCOMING_EVENTS } from '../data/seedData';
 
 export const DEFAULT_WEIGHTS: ModelWeights = {
-  monetaryPolicy: 25,
+  monetaryPolicy: 20,
   realYield: 20,
-  growthPmi: 20,
+  growthPmi: 15,
   laborMarket: 10,
   cotSmartMoney: 15,
-  economicSurprise: 10
+  economicSurprise: 10,
+  newsSentiment: 10
 };
 
 export const PRESET_WEIGHTS: Record<string, { name: string; description: string; weights: ModelWeights }> = {
   BALANCED: {
     name: 'Institutional Balanced (CESI + Z-Score)',
     description: 'Gold standard institutional multi-factor model balancing central bank trajectory, real yield spreads, PMIs, and data surprise momentum.',
-    weights: { monetaryPolicy: 25, realYield: 20, growthPmi: 20, laborMarket: 10, cotSmartMoney: 15, economicSurprise: 10 }
+    weights: { monetaryPolicy: 20, realYield: 20, growthPmi: 15, laborMarket: 10, cotSmartMoney: 15, economicSurprise: 10, newsSentiment: 10 }
   },
   CARRY: {
     name: 'Carry Trade & Yield Curve Spreads',
     description: 'Maximizes exposure to nominal rate spreads, real sovereign yields, and short-end 2Y forward curve expectations.',
-    weights: { monetaryPolicy: 40, realYield: 30, growthPmi: 10, laborMarket: 5, cotSmartMoney: 5, economicSurprise: 10 }
+    weights: { monetaryPolicy: 35, realYield: 30, growthPmi: 10, laborMarket: 5, cotSmartMoney: 5, economicSurprise: 10, newsSentiment: 5 }
   },
   MOMENTUM: {
     name: 'Data Surprises & Macro Growth',
     description: 'Prioritizes economic surprise index momentum (CESI), leading PMIs, and robust GDP expansion.',
-    weights: { monetaryPolicy: 15, realYield: 10, growthPmi: 35, laborMarket: 15, cotSmartMoney: 5, economicSurprise: 20 }
+    weights: { monetaryPolicy: 15, realYield: 10, growthPmi: 30, laborMarket: 15, cotSmartMoney: 5, economicSurprise: 15, newsSentiment: 10 }
   },
   COT: {
     name: 'COT Extreme Positioning & Mean Reversion',
     description: 'Focuses on 52-week institutional positioning Z-scores, identifying crowded extremes and smart-money divergence.',
-    weights: { monetaryPolicy: 15, realYield: 10, growthPmi: 15, laborMarket: 5, cotSmartMoney: 40, economicSurprise: 15 }
+    weights: { monetaryPolicy: 15, realYield: 10, growthPmi: 15, laborMarket: 5, cotSmartMoney: 35, economicSurprise: 10, newsSentiment: 10 }
   }
 };
 

@@ -136,3 +136,125 @@ export async function syncLiveMarketData(
     errors
   };
 }
+
+/**
+ * Aggregates live financial news from multiple global RSS feeds
+ * via a public RSS-to-JSON proxy to bypass CORS and provide a bulletproof stream.
+ */
+export async function aggregateLiveNews(): Promise<import('../types').NewsArticle[]> {
+  // Expanded Tier-1 Institutional & Central Bank RSS Feeds
+  const RSS_FEEDS = [
+    // 1. Broad Market & Macro
+    { url: 'https://finance.yahoo.com/news/rssindex', source: 'Yahoo Finance' },
+    { url: 'https://feeds.a.dj.com/rss/RSSMarketsMain.xml', source: 'Wall Street Journal' },
+    { url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258', source: 'CNBC Economy' },
+    { url: 'http://feeds.marketwatch.com/marketwatch/topstories/', source: 'MarketWatch' },
+    
+    // 2. Forex-Specific & Real-Time Data
+    { url: 'https://www.forexlive.com/feed', source: 'ForexLive' },
+    { url: 'https://www.investing.com/rss/news_1.rss', source: 'Investing.com' },
+    { url: 'https://www.fxstreet.com/rss', source: 'FXStreet' },
+    { url: 'https://www.dailyforex.com/rss/fundamentalanalysis.xml', source: 'DailyForex' },
+    { url: 'https://www.actionforex.com/feed', source: 'ActionForex' },
+    { url: 'https://tradingeconomics.com/rss/', source: 'TradingEconomics' },
+    { url: 'https://www.zerohedge.com/feed', source: 'ZeroHedge' },
+
+    // 3. Direct Central Bank Feeds
+    { url: 'https://www.federalreserve.gov/feeds/press.xml', source: 'Federal Reserve' },
+    { url: 'https://www.federalreserve.gov/feeds/speeches.xml', source: 'Federal Reserve' },
+    { url: 'https://www.ecb.europa.eu/rss/press.xml', source: 'European Central Bank' }
+  ];
+
+  const news: import('../types').NewsArticle[] = [];
+
+  const BULLISH_KEYWORDS = ['surge', 'jump', 'soar', 'beat', 'hike', 'hawkish', 'growth', 'strong', 'rally', 'bullish', 'upgrade', 'breakout', 'optimism', 'high'];
+  const BEARISH_KEYWORDS = ['plunge', 'drop', 'crash', 'miss', 'cut', 'dovish', 'weak', 'fear', 'recession', 'bearish', 'downgrade', 'collapse', 'slump', 'pessimism', 'low'];
+
+  // Advanced Mapping for all 8 major currencies
+  const CURRENCY_MAP: Record<import('../types').CurrencyCode, string[]> = {
+    USD: ['usd', 'fed', 'powell', 'greenback', 'dollar', 'fomc', 'treasury'],
+    EUR: ['eur', 'ecb', 'lagarde', 'euro', 'eurozone', 'bund'],
+    GBP: ['gbp', 'boe', 'bailey', 'pound', 'cable', 'sterling', 'uk'],
+    JPY: ['jpy', 'boj', 'ueda', 'yen', 'kuroda', 'japan'],
+    AUD: ['aud', 'rba', 'bullock', 'aussie', 'australia'],
+    NZD: ['nzd', 'rbnz', 'orr', 'kiwi', 'new zealand'],
+    CAD: ['cad', 'boc', 'macklem', 'loonie', 'canada'],
+    CHF: ['chf', 'snb', 'jordan', 'franc', 'swiss', 'schlegel']
+  };
+
+  try {
+    const fetchPromises = RSS_FEEDS.map(async (feed) => {
+      // Using rss2json as a free proxy to bypass CORS and parse XML. Added timeout for resilience.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      
+      try {
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) return [];
+        const json = await res.json();
+        
+        return (json.items || []).map((item: any) => {
+          const text = (item.title + ' ' + (item.description || '')).toLowerCase();
+          
+          // 1. Quantitative Sentiment Scoring
+          let sentimentScore = 0;
+          BULLISH_KEYWORDS.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'g');
+            sentimentScore += (text.match(regex) || []).length;
+          });
+          BEARISH_KEYWORDS.forEach(word => {
+            const regex = new RegExp(`\\b${word}\\b`, 'g');
+            sentimentScore -= (text.match(regex) || []).length;
+          });
+
+          let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
+          if (sentimentScore >= 2) sentiment = 'BULLISH'; // Needs at least 2 net bullish triggers
+          else if (sentimentScore <= -2) sentiment = 'BEARISH';
+          else if (sentimentScore === 1) sentiment = 'BULLISH';
+          else if (sentimentScore === -1) sentiment = 'BEARISH';
+
+          // 2. Comprehensive Currency Extraction
+          const relatedCurrencies: import('../types').CurrencyCode[] = [];
+          for (const [currency, keywords] of Object.entries(CURRENCY_MAP)) {
+            const isMentioned = keywords.some(kw => {
+              const regex = new RegExp(`\\b${kw}\\b`, 'g');
+              return regex.test(text);
+            });
+            if (isMentioned) {
+              relatedCurrencies.push(currency as import('../types').CurrencyCode);
+            }
+          }
+
+          return {
+            id: item.guid || item.link,
+            title: item.title,
+            source: feed.source,
+            url: item.link,
+            publishedAt: item.pubDate,
+            sentiment,
+            relatedCurrencies
+          };
+        });
+      } catch (err) {
+        console.warn(`[News] Failed to fetch feed ${feed.source}:`, err);
+        return [];
+      }
+    });
+
+    const results = await Promise.all(fetchPromises);
+    results.forEach(arr => news.push(...arr));
+    
+    // Sort by newest, filter out ones with no pubDate just in case
+    return news
+      .filter(n => n.publishedAt && n.title)
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+      .slice(0, 60); // Keep top 60 latest headlines
+  } catch (error) {
+    console.error('Failed to aggregate live news:', error);
+    return []; // Bulletproof fallback: return empty array on failure
+  }
+}

@@ -9,6 +9,17 @@ export interface ModelWeights {
   laborMarket: number;    // Employment conditions
   cotSmartMoney: number;  // Institutional COT positioning
   economicSurprise: number; // Beat/Miss momentum
+  newsSentiment: number;  // Real-time news & geopolitical sentiment
+}
+
+export interface NewsArticle {
+  id: string;
+  title: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+  sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  relatedCurrencies: CurrencyCode[];
 }
 
 export interface SourceHealth {

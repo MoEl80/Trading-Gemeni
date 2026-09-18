@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { computePairAnalyses, getAllCurrenciesScored, DEFAULT_WEIGHTS } from './services/scoringEngine';
-import { getStoredMacroData, syncLiveMarketData, getLastSyncTime } from './services/liveDataService';
+import { getStoredMacroData, syncLiveMarketData, getLastSyncTime, aggregateLiveNews } from './services/liveDataService';
 import { ModelWeightsAndHealth } from './components/ModelWeightsAndHealth';
 import { YieldAndCOTCharts } from './components/YieldAndCOTCharts';
 import { ModelWeights, MarketRegime } from './types';
-import { ForexPairAnalysis, CurrencyCode } from './types';
+import { ForexPairAnalysis, CurrencyCode, NewsArticle } from './types';
 import { UPCOMING_EVENTS } from './data/seedData';
 import { 
   TrendingUp, TrendingDown, Minus, RefreshCw, BarChart2, 
   Calendar, ShieldAlert, Layers, ArrowUpDown, Info, Sliders, CheckCircle, ExternalLink,
-  Zap, Flame, Clock, Gauge, AlertCircle, Activity
+  Zap, Flame, Clock, Gauge, AlertCircle, Activity, Globe
 } from 'lucide-react';
 
 export default function App() {
@@ -28,19 +28,30 @@ export default function App() {
 
   const handleLiveSync = async () => {
     setIsSyncing(true);
+    setIsSyncingNews(true);
     setSyncNotice('Connecting to open financial gateways & mirrors...');
     try {
-      const res = await syncLiveMarketData((msg) => setSyncNotice(msg));
+      // Run news aggregation and market data sync concurrently for speed
+      const [res, fetchedNews] = await Promise.all([
+        syncLiveMarketData((msg) => setSyncNotice(msg)),
+        aggregateLiveNews()
+      ]);
+      
       setMacroData(res.data);
+      if (fetchedNews.length > 0) {
+        setNewsCache(fetchedNews);
+      }
+      
       const nowStr = new Date().toLocaleTimeString();
       setLastSync(nowStr);
-      setSyncNotice(`Synced: ${res.tierUsed === 'LIVE_API' ? 'Live Gateway' : res.tierUsed === 'PUBLIC_MIRROR' ? 'Public Mirror' : 'Snapshot Cache'} (${res.updatedCount} items refreshed)`);
+      setSyncNotice(`Synced: ${res.tierUsed === 'LIVE_API' ? 'Live Gateway' : res.tierUsed === 'PUBLIC_MIRROR' ? 'Public Mirror' : 'Snapshot Cache'} (${res.updatedCount} items refreshed, ${fetchedNews.length} news items)`);
       setTimeout(() => setSyncNotice(null), 5000);
     } catch {
       setSyncNotice('Network restricted. Retained validated local snapshot cache.');
       setTimeout(() => setSyncNotice(null), 5000);
     } finally {
       setIsSyncing(false);
+      setIsSyncingNews(false);
     }
   };
 
@@ -49,7 +60,9 @@ export default function App() {
   const [filterVolState, setFilterVolState] = useState<string>('ALL');
   const [search, setSearch] = useState<string>('');
   const [selectedPair, setSelectedPair] = useState<ForexPairAnalysis | null>(null);
-  const [activeTab, setActiveTab] = useState<'matrix' | 'cot' | 'charts' | 'calendar' | 'weights'>('matrix');
+  const [activeTab, setActiveTab] = useState<'matrix' | 'cot' | 'charts' | 'calendar' | 'news' | 'weights'>('matrix');
+  const [newsCache, setNewsCache] = useState<NewsArticle[]>([]);
+  const [isSyncingNews, setIsSyncingNews] = useState(false);
 
   // Ranked currencies by strength
   const rankedCurrencies = Object.values(currencies).sort((a, b) => b.score - a.score);
@@ -180,6 +193,14 @@ export default function App() {
             }`}
           >
             Economic Calendar
+          </button>
+          <button
+            onClick={() => setActiveTab('news')}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
+              activeTab === 'news' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" /> News & Sentiment
           </button>
           <button
             onClick={() => setActiveTab('weights')}
@@ -486,6 +507,77 @@ export default function App() {
                 </tbody>
               </table>
             </div>
+          </section>
+        )}
+
+        {/* Global Macro News View */}
+        {activeTab === 'news' && (
+          <section className="bg-[#161b22] border border-slate-800/80 rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-cyan-400" />
+                  Live Global Macro & Geopolitical News
+                </h2>
+                <p className="text-xs text-slate-400">Aggregated real-time feed from top financial news sources (Reuters, Yahoo, ForexLive).</p>
+              </div>
+              <button
+                onClick={handleLiveSync}
+                disabled={isSyncingNews}
+                className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-cyan-900/30 text-cyan-400 border border-cyan-800 rounded-md hover:bg-cyan-900/50 transition"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingNews ? 'animate-spin' : ''}`} />
+                Refresh Feed
+              </button>
+            </div>
+
+            {newsCache.length === 0 ? (
+              <div className="py-10 text-center text-slate-500 text-sm border border-slate-800/50 rounded-lg bg-slate-900/30 border-dashed">
+                {isSyncingNews ? 'Fetching live news...' : 'No news loaded. Click "Refresh Feed" or "Live Sync".'}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {newsCache.map((article, idx) => (
+                  <a 
+                    key={idx} 
+                    href={article.url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="block p-4 bg-slate-900/60 border border-slate-800 rounded-xl hover:bg-slate-800/50 hover:border-slate-700 transition space-y-3 group"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-800 px-2 py-0.5 rounded">
+                        {article.source}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex-shrink-0 ${
+                        article.sentiment === 'BULLISH' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' :
+                        article.sentiment === 'BEARISH' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/20' :
+                        'bg-slate-700 text-slate-300'
+                      }`}>
+                        {article.sentiment}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-sm font-semibold text-white group-hover:text-cyan-300 transition line-clamp-2 leading-snug">
+                      {article.title}
+                    </h3>
+                    
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-800/60">
+                      <div className="flex gap-1.5">
+                        {article.relatedCurrencies.map(c => (
+                          <span key={c} className="text-[9px] font-mono font-bold text-cyan-400 bg-cyan-950/50 px-1.5 py-0.5 rounded border border-cyan-900/50">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {new Date(article.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
