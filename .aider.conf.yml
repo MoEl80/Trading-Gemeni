@@ -1,0 +1,4 @@
+# Aider reads these files into every chat (Mohamed's standing rules).
+read:
+  - CONVENTIONS.md
+  - AGENTS.md
