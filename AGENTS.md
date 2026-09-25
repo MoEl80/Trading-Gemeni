@@ -5,7 +5,7 @@
 - Session end or any milestone: append `## YYYY-MM-DD HH:MM:SS` (Australia/Sydney, 24h) - what changed, decisions, next steps as `- [ ]`. Append only; never rewrite older entries. Then run: `git -C "C:\AI\General Manager" add -A && git -C "C:\AI\General Manager" commit -m "Trading-Gemeni: <what changed>"`.
 - Credentials: read `C:\AI\General Manager\APIs\APIs Index.md`; never copy values into this folder or chat. Demo/practice tokens are not secrets.
 - Code, data and zips stay here; only notes go in General Manager.
-- Verification: state the target in one line before working; finish with a runnable check (red before, green after) and a readback. Cold review by a different model before big runs.
+- Verification: state the target in one line before working; finish with a runnable check (red before, green after) and a readback. Model choice is Mohamed's (2026-09-25): main and subagents each use whatever model is selected for them - never insist on one; if the same check is still red after two attempts, stop and tell Mohamed what's red and what was tried.
 - Full rules (models by job, hard limits, routing): `C:\AI\General Manager\AGENTS.md` section "Working inside a project folder".
 
 ## Purpose
